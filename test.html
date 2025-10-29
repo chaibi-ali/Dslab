@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Envoi Google Sheet</title>
+  <style>
+    body {
+      font-family: "Open Sans", sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    form {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 15px;
+    }
+    button {
+      background: #0078d7;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    #message {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <form id="contact-form">
+    <h2>Formulaire Test</h2>
+
+    <input type="text" name="nom" placeholder="Nom / Société" required />
+    <input type="email" name="email" placeholder="Email" required />
+    <input type="tel" name="telephone" placeholder="Téléphone" />
+    <select name="sujet" required>
+      <option value="" disabled selected>Sélectionnez un sujet</option>
+      <option value="devis">Demande de devis</option>
+      <option value="information">Information produit</option>
+      <option value="support">Support technique</option>
+    </select>
+    <textarea name="message" placeholder="Votre message..." required></textarea>
+    
+    <button type="submit" id="submit-btn">Envoyer</button>
+    <div id="message"></div>
+  </form>
+
+  <script>
+    const form = document.getElementById('contact-form');
+    const msgBox = document.getElementById('message');
+    const btn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      msgBox.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours...';
+
+      const data = {
+        date: new Date().toLocaleString('fr-FR'),
+        nom: form.nom.value.trim(),
+        email: form.email.value.trim(),
+        telephone: form.telephone.value.trim(),
+        sujet: form.sujet.value,
+        message: form.message.value.trim()
+      };
+
+      // 🔗 Replace this URL with your DEPLOYED Web App URL (the /exec one)
+      const GOOGLE_SCRIPT_URL = 'http://script.google.com/macros/s/AKfycbw9ltv4qsxUzKw-VAFB0mIs4LUBwScXOuAaa6Tliyeu3oRKjP7yGxhY7sitKMOkb2coUw/exec';
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(response => {
+        console.log(response);
+        if (response.result === 'success') {
+          msgBox.textContent = '✅ Données envoyées avec succès !';
+          msgBox.className = 'success';
+          form.reset();
+        } else {
+          msgBox.textContent = '⚠️ Erreur : ' + (response.error || 'Réponse invalide');
+          msgBox.className = 'error';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        msgBox.textContent = '🚨 Une erreur est survenue : ' + err.message;
+        msgBox.className = 'error';
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = 'Envoyer';
+      });
+    });
+  </script>
+</body>
+</html>
